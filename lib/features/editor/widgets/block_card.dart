@@ -81,21 +81,29 @@ class BlockCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Heading', style: label),
-                const SizedBox(width: 12),
-                SegmentedButton<int>(
-                  showSelectedIcon: false,
-                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                  segments: const [
-                    ButtonSegment(value: 1, label: Text('H1')),
-                    ButtonSegment(value: 2, label: Text('H2')),
-                    ButtonSegment(value: 3, label: Text('H3')),
-                  ],
-                  selected: {block.level},
-                  onSelectionChanged: (s) => edit((b) => b.copyWith(level: s.first)),
+                Expanded(
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text('Heading', style: label),
+                      SegmentedButton<int>(
+                        showSelectedIcon: false,
+                        style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                        segments: const [
+                          ButtonSegment(value: 1, label: Text('H1')),
+                          ButtonSegment(value: 2, label: Text('H2')),
+                          ButtonSegment(value: 3, label: Text('H3')),
+                        ],
+                        selected: {block.level},
+                        onSelectionChanged: (s) => edit((b) => b.copyWith(level: s.first)),
+                      ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 _ColorPicker(
                   current: block.color,
                   colors: {for (final c in NotionConstants.textColors) c: notionTextColors[c]!},
@@ -190,10 +198,13 @@ class BlockCard extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 4,
                   children: [
                     Text('Columns', style: label),
-                    const Spacer(),
                     SegmentedButton<int>(
                       showSelectedIcon: false,
                       style: const ButtonStyle(visualDensity: VisualDensity.compact),
@@ -332,7 +343,11 @@ class _ChildList extends ConsumerWidget {
             padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: [Icon(Icons.add, size: 18), SizedBox(width: 4), Text('Add block here')],
+              children: [
+                Icon(Icons.add, size: 18),
+                SizedBox(width: 4),
+                Flexible(child: Text('Add block here', overflow: TextOverflow.ellipsis)),
+              ],
             ),
           ),
         ),

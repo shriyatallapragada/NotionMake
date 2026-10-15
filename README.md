@@ -110,6 +110,12 @@ browser or app on that device; they are not synced between devices, and they don
 
 Notion shows an embed only if the page allows being framed; these pages do. If an embed ever shows just a plain link, tell us.
 
+## Light and dark theme
+
+The app follows your computer's light/dark setting by default. To choose yourself, click the **sun/moon button** in the toolbar (wide
+windows), or open the **...** menu > **Appearance** and pick **Light**, **Dark** or **Match my computer**. Your choice is remembered.
+The page preview always stays light, because it imitates a white Notion page.
+
 ## Keyboard shortcuts
 
 | Action | macOS | Windows / Linux |

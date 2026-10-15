@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../theme_mode.dart';
 import '../../ai/ai_sheet.dart';
 import '../../publish/publish_sheet.dart';
 import '../models/template_model.dart';
@@ -54,14 +55,36 @@ class BuilderScreen extends ConsumerWidget {
         onSelected: (v) {
           if (v == 'about') {
             _showAbout(context);
+          } else if (v.startsWith('theme:')) {
+            ref.read(themeModeProvider.notifier).set(ThemeMode.values.byName(v.substring(6)));
           } else {
             ref.read(tokenProvider.notifier).disconnect();
           }
         },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'about', child: Text('About NotionMake')),
-          PopupMenuItem(value: 'disconnect', child: Text('Disconnect Notion')),
-        ],
+        itemBuilder: (_) {
+          final mode = ref.read(themeModeProvider);
+          return [
+            const PopupMenuItem(enabled: false, child: Text('Appearance')),
+            CheckedPopupMenuItem(
+              value: 'theme:light',
+              checked: mode == ThemeMode.light,
+              child: const Text('Light'),
+            ),
+            CheckedPopupMenuItem(
+              value: 'theme:dark',
+              checked: mode == ThemeMode.dark,
+              child: const Text('Dark'),
+            ),
+            CheckedPopupMenuItem(
+              value: 'theme:system',
+              checked: mode == ThemeMode.system,
+              child: const Text('Match my computer'),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(value: 'about', child: Text('About NotionMake')),
+            const PopupMenuItem(value: 'disconnect', child: Text('Disconnect Notion')),
+          ];
+        },
       ),
     ];
 
@@ -111,6 +134,23 @@ class BuilderScreen extends ConsumerWidget {
               appBar: AppBar(
                 title: const Text('NotionMake'),
                 actions: [
+                  IconButton(
+                    tooltip: Theme.of(context).brightness == Brightness.dark
+                        ? 'Switch to light theme'
+                        : 'Switch to dark theme',
+                    icon: Icon(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                    ),
+                    onPressed: () => ref
+                        .read(themeModeProvider.notifier)
+                        .set(
+                          Theme.of(context).brightness == Brightness.dark
+                              ? ThemeMode.light
+                              : ThemeMode.dark,
+                        ),
+                  ),
                   ...tools,
                   Tooltip(
                     message: 'Publish (${mod}Enter)',

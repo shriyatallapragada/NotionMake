@@ -115,40 +115,69 @@ class DatabaseEditor extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: SyncedField(
-                  value: p.name,
-                  decoration: InputDecoration(
-                    labelText: i == 0 ? 'Title column' : 'Column name',
-                    isDense: true,
-                  ),
-                  onChanged: (v) => _setProp(p.id, (x) => x.copyWith(name: v), typing: true),
+          LayoutBuilder(
+            builder: (context, c) {
+              final nameField = SyncedField(
+                value: p.name,
+                decoration: InputDecoration(
+                  labelText: i == 0 ? 'Title column' : 'Column name',
+                  isDense: true,
                 ),
-              ),
-              const SizedBox(width: 8),
-              if (i == 0)
-                const Chip(label: Text('Title'), visualDensity: VisualDensity.compact)
-              else
-                DropdownButton<DbPropType>(
-                  value: p.type,
-                  underline: const SizedBox.shrink(),
-                  items: [
-                    for (final t in DbPropType.values.where((t) => t != DbPropType.title))
-                      DropdownMenuItem(value: t, child: Text(t.label)),
+                onChanged: (v) => _setProp(p.id, (x) => x.copyWith(name: v), typing: true),
+              );
+              Widget typeControl({required bool expand}) => i == 0
+                  ? const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Chip(label: Text('Title'), visualDensity: VisualDensity.compact),
+                    )
+                  : DropdownButton<DbPropType>(
+                      isExpanded: expand,
+                      value: p.type,
+                      underline: const SizedBox.shrink(),
+                      items: [
+                        for (final t in DbPropType.values.where((t) => t != DbPropType.title))
+                          DropdownMenuItem(value: t, child: Text(t.label)),
+                      ],
+                      onChanged: (t) =>
+                          t == null ? null : _setProp(p.id, (x) => x.copyWith(type: t)),
+                    );
+              final remove = i == 0
+                  ? const SizedBox.shrink()
+                  : IconButton(
+                      tooltip: 'Remove column',
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => edit(
+                        (b) => b.copyWith(
+                          properties: b.properties.where((x) => x.id != p.id).toList(),
+                        ),
+                      ),
+                    );
+              // On a narrow card the name gets its own line, so nothing overflows.
+              if (c.maxWidth < 330) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    nameField,
+                    Row(
+                      children: [
+                        Expanded(child: typeControl(expand: true)),
+                        remove,
+                      ],
+                    ),
                   ],
-                  onChanged: (t) => t == null ? null : _setProp(p.id, (x) => x.copyWith(type: t)),
-                ),
-              if (i > 0)
-                IconButton(
-                  tooltip: 'Remove column',
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () => edit(
-                    (b) => b.copyWith(properties: b.properties.where((x) => x.id != p.id).toList()),
-                  ),
-                ),
-            ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: nameField),
+                  const SizedBox(width: 8),
+                  i == 0
+                      ? typeControl(expand: false)
+                      : SizedBox(width: 130, child: typeControl(expand: true)),
+                  remove,
+                ],
+              );
+            },
           ),
           if (p.type.hasOptions)
             Padding(

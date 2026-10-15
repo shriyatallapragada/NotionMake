@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app_theme.dart';
 import '../../../core/widget_library.dart';
 import '../models/template_model.dart';
 import '../providers/editor_provider.dart';
@@ -15,47 +16,52 @@ class PreviewPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(editorProvider.select((s) => s.template));
-    return Semantics(
-      label: 'Approximate preview of the Notion page',
-      child: ColoredBox(
-        color: Colors.white,
-        child: DefaultTextStyle(
-          style: const TextStyle(color: _ink, fontSize: 16, height: 1.5),
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-            children: [
-              if (t.coverUrl.trim().startsWith('http'))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: SizedBox(
-                      height: 120,
-                      child: Image.network(
-                        t.coverUrl.trim(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const ColoredBox(
-                          color: Color(0xFFF1F1EF),
-                          child: Center(child: Text('Cover not available')),
+    // The preview imitates a (white) Notion page, so it always uses the light
+    // theme: icons, dividers and text must not turn light-on-white in dark mode.
+    return Theme(
+      data: buildAppTheme(Brightness.light),
+      child: Semantics(
+        label: 'Approximate preview of the Notion page',
+        child: ColoredBox(
+          color: Colors.white,
+          child: DefaultTextStyle(
+            style: const TextStyle(color: _ink, fontSize: 16, height: 1.5),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              children: [
+                if (t.coverUrl.trim().startsWith('http'))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(
+                        height: 120,
+                        child: Image.network(
+                          t.coverUrl.trim(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const ColoredBox(
+                            color: Color(0xFFF1F1EF),
+                            child: Center(child: Text('Cover not available')),
+                          ),
                         ),
                       ),
                     ),
                   ),
+                Text(t.icon, style: const TextStyle(fontSize: 56)),
+                const SizedBox(height: 8),
+                Text(
+                  t.title.isEmpty ? 'Untitled' : t.title,
+                  style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
                 ),
-              Text(t.icon, style: const TextStyle(fontSize: 56)),
-              const SizedBox(height: 8),
-              Text(
-                t.title.isEmpty ? 'Untitled' : t.title,
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              ..._blocks(t.blocks),
-              const SizedBox(height: 16),
-              const Text(
-                'Approximate preview',
-                style: TextStyle(color: Color(0xFF9B9A97), fontSize: 12),
-              ),
-            ],
+                const SizedBox(height: 16),
+                ..._blocks(t.blocks),
+                const SizedBox(height: 16),
+                const Text(
+                  'Approximate preview',
+                  style: TextStyle(color: Color(0xFF9B9A97), fontSize: 12),
+                ),
+              ],
+            ),
           ),
         ),
       ),
