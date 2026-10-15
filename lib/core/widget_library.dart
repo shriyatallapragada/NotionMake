@@ -7,7 +7,19 @@ library;
 import 'constants.dart';
 import 'notion/database_mapper.dart' show isValidDbDate;
 
-enum OptionKind { choice, text, integer, flag, date, time, dateList, month, timezone }
+enum OptionKind {
+  choice,
+  text,
+  integer,
+  flag,
+  date,
+  time,
+  dateList,
+  month,
+  timezone,
+  itemList,
+  indexList,
+}
 
 class WidgetOption {
   final String name;
@@ -42,11 +54,19 @@ class WidgetOption {
     OptionKind.month => '$name (YYYY-MM)',
     OptionKind.timezone => '$name (IANA zone such as Asia/Kolkata)',
     OptionKind.text => '$name (short text)',
+    OptionKind.itemList => '$name (the tasks, separated by |, up to 30)',
+    OptionKind.indexList => '$name (numbers of tasks already done, comma-separated)',
   };
 
   /// A cleaned value, or null if [raw] isn't acceptable for this option.
   String? normalize(String raw) {
-    final v = raw.replaceAll(RegExp(r'[\x00-\x1F]'), '').trim();
+    // Control characters are removed, except the newlines that separate tasks.
+    final v = raw
+        .replaceAll(
+          kind == OptionKind.itemList ? RegExp(r'[\x00-\x09\x0B-\x1F]') : RegExp(r'[\x00-\x1F]'),
+          '',
+        )
+        .trim();
     if (v.isEmpty) return null;
     switch (kind) {
       case OptionKind.choice:
@@ -77,6 +97,22 @@ class WidgetOption {
         return m ? v : null;
       case OptionKind.timezone:
         return WidgetLibrary.normalizeTimezone(v);
+      case OptionKind.itemList:
+        // One task per line or separated by "|". List markers the AI may add are removed.
+        final tasks = [
+          for (final t in v.split(RegExp(r'[|\n]')))
+            () {
+              final c = t.replaceFirst(RegExp(r'^\s*(?:[-*•]|\[[ xX]?\]|\d+[.)])\s+'), '').trim();
+              return c.runes.length > 60 ? String.fromCharCodes(c.runes.take(60)) : c;
+            }(),
+        ].where((t) => t.isNotEmpty).take(30).toList();
+        return tasks.isEmpty ? null : tasks.join('|');
+      case OptionKind.indexList:
+        final nums = {
+          for (final p in v.split(RegExp(r'[,\s;]+')))
+            if (int.tryParse(p) case final n? when n >= 1 && n <= 30) n,
+        }.toList()..sort();
+        return nums.isEmpty ? null : nums.join(',');
     }
   }
 }
@@ -218,9 +254,21 @@ class WidgetLibrary {
       ],
     ),
     LibraryWidget(
+      'checklist',
+      'Checklist',
+      'Tasks you can tick, with a progress bar that follows them. Use this when the user wants a progress bar connected to their tasks.',
+      '✅',
+      [
+        WidgetOption('items', 'Tasks', OptionKind.itemList, required: true),
+        WidgetOption('title', 'Title', OptionKind.text),
+        WidgetOption('done', 'Already done (task numbers)', OptionKind.indexList),
+        _theme,
+      ],
+    ),
+    LibraryWidget(
       'progress',
-      'Progress bar',
-      'How far through the day, week, month, year or a date range you are.',
+      'Time progress bar',
+      'How far through the day, week, month, year or a date range you are (time only, not tasks).',
       '📊',
       [
         WidgetOption(
@@ -325,6 +373,8 @@ class WidgetLibrary {
             : '${o['focus'] ?? 25}/${o['break'] ?? 5} min Pomodoro',
       'countdown' => o['label'] ?? o['date'],
       'progress' => o['label'] ?? o['type'],
+      'checklist' =>
+        o['title'] ?? '${(o['items'] ?? '').split('|').where((t) => t.isNotEmpty).length} tasks',
       'quote' => o['tag'],
       _ => null,
     };

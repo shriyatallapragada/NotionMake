@@ -351,4 +351,141 @@ void main() {
       expect(find.text('Exam'), findsOneWidget);
     });
   });
+
+  group('checklist widget', () {
+    Map<String, String> q(String? url) => Uri.parse(url!).queryParameters;
+
+    test('tasks are cleaned up and limited', () {
+      final b = WidgetLibrary.build('checklist', {
+        'items': '- Read ch. 1\n[ ] Write essay | 3) Revise ||  \n* Practice',
+        'title': 'Exam prep',
+      })!;
+      expect(q(b.url)['items'], 'Read ch. 1|Write essay|Revise|Practice');
+      expect(q(b.url)['title'], 'Exam prep');
+
+      final many = WidgetLibrary.build('checklist', {
+        'items': [for (var i = 1; i <= 40; i++) 'Task $i'].join('\n'),
+      })!;
+      expect(q(many.url)['items']!.split('|').length, 30);
+
+      final long = WidgetLibrary.build('checklist', {'items': 'x' * 200})!;
+      expect(q(long.url)['items']!.length, 60);
+    });
+
+    test('at least one task is required', () {
+      expect(WidgetLibrary.build('checklist', {})!.url, isNull);
+      expect(WidgetLibrary.build('checklist', {'items': ' | \n '})!.url, isNull);
+    });
+
+    test('already-done numbers are validated', () {
+      final b = WidgetLibrary.build('checklist', {'items': 'a|b|c', 'done': '3, 1, 99, x, 1'})!;
+      expect(q(b.url)['done'], '1,3');
+    });
+
+    test('tasks with special characters stay safely encoded', () {
+      final url = WidgetLibrary.build('checklist', {'items': '<b>bold</b> & "quotes"|#hash'})!.url!;
+      expect(url, isNot(contains('<')));
+      expect(
+        q(url)['items'],
+        '<b>bold</b> & "quotes"|#hash',
+      ); // survives the round trip as plain text
+    });
+
+    test('describe names it by title or task count', () {
+      expect(
+        WidgetLibrary.describe(
+          WidgetLibrary.build('checklist', {'items': 'a|b', 'title': 'Exam'})!.url!,
+        ),
+        'Checklist · Exam',
+      );
+      expect(
+        WidgetLibrary.describe(WidgetLibrary.build('checklist', {'items': 'a|b|c'})!.url!),
+        'Checklist · 3 tasks',
+      );
+    });
+
+    test('the AI is told to use it for task progress, and the converter builds it', () {
+      final prompt = aiSystemPrompt([]);
+      expect(prompt, contains('checklist'));
+      expect(prompt, contains('TASKS'));
+      final p = aiJsonToTemplate({
+        'title': 't',
+        'blocks': [
+          {'type': 'heading', 'text': 'Plan', 'color': 'green'},
+          embed('checklist', {'items': 'Read\nWrite\nRevise', 'title': 'Essay', 'done': '1'}),
+        ],
+      }, allowedUrls: {});
+      final block = p.template.blocks[1];
+      expect(block.type, BlockType.embed);
+      expect(q(block.text), {
+        'items': 'Read|Write|Revise',
+        'title': 'Essay',
+        'done': '1',
+        'theme': 'sage',
+      });
+      // a checklist without tasks becomes a helpful note instead of a broken widget
+      final bad = aiJsonToTemplate({
+        'title': 't',
+        'blocks': [
+          embed('checklist'),
+          {'type': 'paragraph', 'text': 'x'},
+        ],
+      }, allowedUrls: {});
+      expect(bad.template.blocks.first.type, BlockType.callout);
+    });
+
+    testWidgets('the dialog needs a task, shows one per line, and builds the link', (t) async {
+      t.view.physicalSize = const Size(900, 1600);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      String? got;
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (c) => TextButton(
+              onPressed: () async => got = await showWidgetDialog(
+                c,
+                WidgetLibrary.byKind('checklist')!,
+                initial: got == null ? const {} : const {},
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      final use = find.widgetWithText(FilledButton, 'Use this widget');
+      expect(t.widget<FilledButton>(use).onPressed, isNull);
+      await t.enterText(find.widgetWithText(TextField, 'Tasks *'), 'Read\nWrite');
+      await t.pump();
+      expect(t.widget<FilledButton>(use).onPressed, isNotNull);
+      await t.tap(use);
+      await t.pumpAndSettle();
+      expect(q(got), {'items': 'Read|Write'});
+    });
+
+    testWidgets('reopening shows existing tasks one per line', (t) async {
+      t.view.physicalSize = const Size(900, 1600);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (c) => TextButton(
+              onPressed: () => showWidgetDialog(
+                c,
+                WidgetLibrary.byKind('checklist')!,
+                initial: const {'items': 'Read|Write'},
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+      expect(find.text('Read\nWrite'), findsOneWidget);
+    });
+  });
 }

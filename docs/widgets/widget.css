@@ -55,3 +55,13 @@ body.doc { display: block; padding: 24px; font-size: 16px; }
 .doc-main { text-align: left; max-width: 760px; margin: auto; }
 .doc code { background: var(--card); padding: .1em .4em; border-radius: .3em; }
 .doc a { color: var(--fg); }
+/* checklist */
+body.top { place-items: start center; }
+.tasks { list-style: none; padding: 0; margin: .9em auto 0; text-align: left; max-width: 34em; }
+.tasks li { padding: .25em 0; }
+.tasks label { display: flex; gap: .6em; align-items: flex-start; cursor: pointer; font-size: calc(var(--u) * 1.5); line-height: 1.3; }
+.tasks input { width: 1.15em; height: 1.15em; margin: .1em 0 0; accent-color: var(--accent); flex: none; cursor: pointer; }
+.tasks .done span { text-decoration: line-through; opacity: .6; }
+.tasks input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pct-row { display: flex; align-items: baseline; justify-content: center; gap: .5em; }
+.pct-row .big { font-size: calc(var(--u) * 3.6); }

@@ -38,7 +38,9 @@ void main() {
         model: model,
         prompt: prompt,
         widgets: [for (final p in WidgetPreset.all) (name: p.name, url: p.url)],
-        attachments: [AiAttachment.text('timetable.csv', _timetable)],
+        attachments: Platform.environment['OLLAMA_NODOC'] == '1'
+            ? const []
+            : [AiAttachment.text('timetable.csv', _timetable)],
         onStatus: (_) {},
       );
       final t = outcome.page.template;
@@ -53,6 +55,8 @@ void main() {
       )) {
         stdout.writeln('  ${b.type.name}: ${b.text}');
       }
+      final todos = t.blocks.where((b) => b.type == BlockType.todo).length;
+      stdout.writeln('separate to-do blocks: $todos');
       stdout.writeln('WARNING: ${outcome.warning}');
       expect(validateTemplate(t), isNull);
     },

@@ -49,7 +49,7 @@ over the page before publishing. Generating takes roughly 20-60 seconds on a rec
 
 ## Built-in widgets
 
-NotionMake ships six small widgets that Notion can embed, hosted for free with GitHub Pages from the `docs/widgets` folder
+NotionMake ships seven small widgets that Notion can embed, hosted for free with GitHub Pages from the `docs/widgets` folder
 of this repository. They run entirely in the viewer's browser: no tracking, no cookies, no network calls, and settings in the
 link are only ever shown as text, never run as code.
 
@@ -57,9 +57,10 @@ link are only ever shown as text, never run as code.
 |---|---|---|
 | Clock | live time in any time zone, digital or analog | time zone, style, 12-hour, seconds, date, label |
 | Timer | Pomodoro focus timer, countdown timer or stopwatch | mode, focus/break/long minutes, rounds, minutes |
+| Checklist | tasks you can tick, with a progress bar that follows them | tasks, title, tasks already done |
 | Countdown | days, hours and minutes until a date | date, time, label |
 | Calendar | month view, today highlighted, dates you mark | week start, marked dates, month |
-| Progress bar | how far through a day, week, month, year or date range | period, start/end, label |
+| Time progress bar | how far through a day, week, month, year or date range | period, start/end, label |
 | Quote | a short motivating line that changes daily | topic |
 
 All of them take a color: `auto` (follows light/dark), `dark`, `terracotta`, `sage`, `periwinkle`, `navy`, `teal` or `rose`.
@@ -73,6 +74,11 @@ All of them take a color: `auto` (follows light/dark), `dark`, `terracotta`, `sa
 - **Hosting them yourself:** fork the repo, enable GitHub Pages (branch `main`, folder `/docs`), and change `widgetsBaseUrl`
   in `lib/core/constants.dart`. Widgets must be reachable on the public web because Notion loads them in the viewer's browser, so a
   private repository won't work for embeds.
+
+**About the checklist:** a Notion embed is a separate web page, and Notion doesn't let it see your page's own to-do blocks, so a widget can't
+follow them. The checklist therefore has its *own* tasks: tick them inside the widget and its progress bar moves. Ticks are remembered in that
+browser or app on that device; they are not synced between devices, and they don't change Notion's own to-do blocks. When you ask the AI for a
+"progress bar for my tasks", it builds this widget with your tasks inside it instead of a separate to-do list.
 
 Notion shows an embed only if the page allows being framed; these pages do. If an embed ever shows just a plain link, tell us.
 

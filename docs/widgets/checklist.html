@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Checklist</title>
+<link rel="stylesheet" href="widget.css">
+</head>
+<body class="top">
+<main>
+<div class="label" id="label"></div>
+<div class="pct-row"><div class="big" id="pct">0%</div><div class="sub" id="count"></div></div>
+<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar" aria-label="Progress"><i id="fill"></i></div>
+<ul class="tasks" id="list"></ul>
+<div class="sub" id="note"></div>
+<div class="row"><button id="reset" type="button">Reset</button></div>
+</main>
+<script src="widget.js"></script>
+<script src="checklist.js"></script>
+</body>
+</html>

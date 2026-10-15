@@ -170,6 +170,7 @@ Built-in widgets are always available. Add one as {"type": "embed", "widget": "<
 ${WidgetLibrary.promptSection()}
 - Add the widgets the user asks for. If they did not ask but the page clearly benefits (for example a countdown when they mention an exam or trip date, or a timer or clock on a study planner), add one or two. Never more than 3 in total.
 - Use only the kinds and options listed. Omit "options" for the defaults. Do not set "theme": it is matched to the page automatically. Time zones are IANA names such as ${WidgetLibrary.exampleZones}.
+- A progress bar that tracks the user's TASKS: use the checklist widget with the tasks in "items", and do NOT also write the same tasks as a separate to-do list (a Notion to-do list cannot be connected to a widget). The progress widget only measures time.
 - Put widgets where they are useful, for example beside the schedule in a column or right under the heading.
 - If the user wants a kind of widget that is not in the list (weather, maps, ...), add a callout with emoji 💡 and color yellow_background that tells them what to add (for example "Add a weather widget here: paste a widget link into an embed block."). Never make up a URL.
 Saved widget links from the user (name: URL), for requests that match their name only:

@@ -34,8 +34,14 @@ class _WidgetDialogState extends State<_WidgetDialog> {
     super.dispose();
   }
 
-  TextEditingController _controller(String name) =>
-      _controllers.putIfAbsent(name, () => TextEditingController(text: _values[name] ?? ''));
+  TextEditingController _controller(String name) => _controllers.putIfAbsent(name, () {
+    final v = _values[name] ?? '';
+    // Saved links separate tasks with "|"; the editor shows one per line.
+    final text = widget.widget.option(name)?.kind == OptionKind.itemList
+        ? v.replaceAll('|', '\n')
+        : v;
+    return TextEditingController(text: text);
+  });
 
   void _set(String name, String v) =>
       setState(() => v.isEmpty ? _values.remove(name) : _values[name] = v);
@@ -128,8 +134,25 @@ class _WidgetDialogState extends State<_WidgetDialog> {
           ),
           onChanged: (v) => _set(o.name, v.trim()),
         );
+      case OptionKind.itemList:
+        return TextField(
+          controller: _controller(o.name),
+          minLines: 3,
+          maxLines: 8,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: 'One task per line (up to 30)',
+            alignLabelWithHint: true,
+            isDense: true,
+            errorText:
+                shown ??
+                (o.required && (_values[o.name] ?? '').isEmpty ? 'Add at least one task' : null),
+          ),
+          onChanged: (v) => _set(o.name, v.trim()),
+        );
       default:
         final hint = switch (o.kind) {
+          OptionKind.indexList => 'Numbers separated by commas, for example 1, 3',
           OptionKind.integer => '${o.min}-${o.max} (default ${o.defaultValue})',
           OptionKind.time => 'HH:MM, for example 09:30',
           OptionKind.dateList => 'Dates separated by commas: 2026-11-02, 2026-11-09',
