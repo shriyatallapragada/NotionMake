@@ -174,8 +174,9 @@ void _showAbout(BuildContext context) => showAboutDialog(
       'NotionMake runs entirely on your device. Your Notion token is stored in your '
       "device's secure keychain, and the app talks only to api.notion.com. The AI feature "
       'uses Ollama running on your own computer, so your requests and documents are not '
-      'sent online. NotionMake only ever creates new pages: it never edits or deletes '
-      'anything you already have.',
+      'sent online. By default NotionMake creates a new page. It changes an existing page '
+      'only when you choose "Add to this page" or "Replace this page\'s content" while '
+      'publishing, and replaced content goes to Notion\'s trash, where you can restore it.',
     ),
   ],
 );

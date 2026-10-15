@@ -10,7 +10,9 @@ class NotionException implements Exception {
     final raw = body?['message'] as String?;
     final friendly = switch (code) {
       'unauthorized' => 'Notion rejected the token. Copy it again from your integration page.',
-      'restricted_resource' => "This integration isn't allowed to do that. Check its capabilities.",
+      'restricted_resource' =>
+        "This integration isn't allowed to do that. In notion.so/my-integrations, open your "
+            'integration and turn on "Read content", "Insert content" and "Update content".',
       'object_not_found' =>
         "Notion can't see that page. Open it in Notion, click ... > "
             'Connections, and add your integration.',

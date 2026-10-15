@@ -130,3 +130,17 @@ List<List<Json>> chunkNotionBlocks(
   if (cur.isNotEmpty) out.add(cur);
   return out;
 }
+
+/// Body for PATCH /v1/pages/{id}: the template's title, icon and cover, for
+/// updating an existing page. Empty icons and covers are left unchanged.
+Json pageDetailsPayload(Template t) => {
+  'properties': {
+    'title': {'title': richText(t.title)},
+  },
+  if (t.icon.trim().isNotEmpty) 'icon': {'type': 'emoji', 'emoji': t.icon.trim()},
+  if (t.coverUrl.trim().isNotEmpty)
+    'cover': {
+      'type': 'external',
+      'external': {'url': t.coverUrl.trim()},
+    },
+};

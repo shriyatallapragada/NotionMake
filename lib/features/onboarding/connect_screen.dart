@@ -65,8 +65,8 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Your token stays on this device. NotionMake only talks to Notion '
-                    '(and to AI running on your own computer, if you use it) and only ever '
-                    'creates new pages.',
+                    '(and to AI running on your own computer, if you use it). It creates new '
+                    'pages unless you choose to update an existing one.',
                     style: text.bodySmall,
                   ),
                   const SizedBox(height: 24),

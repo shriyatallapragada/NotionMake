@@ -14,14 +14,30 @@ class PublishResult {
   const PublishResult(this.pageId, this.url, {this.warnings = const []});
 }
 
+/// Where the template goes.
+enum PublishMode {
+  /// A new page inside the chosen page. Nothing existing is touched.
+  newPage,
+
+  /// The template's blocks are added to the end of the chosen page.
+  append,
+
+  /// The template's blocks are added to the chosen page, then the page's old
+  /// content is moved to Notion's trash (it can be restored there).
+  replace,
+}
+
 /// Thrown when the page exists but some of its content failed to publish.
 class PartialPublishException extends NotionException {
   final PublishResult page;
 
   /// Blocks (or database rows) that were not created.
   final int missingBlocks;
-  PartialPublishException(this.page, this.missingBlocks, String cause)
-    : super('The page was created, but $missingBlocks items are missing: $cause');
+  PartialPublishException(this.page, this.missingBlocks, String cause, {bool created = true})
+    : super(
+        '${created ? 'The page was created, but' : 'Part of the content was added, but'} '
+        '$missingBlocks items are missing: $cause',
+      );
 }
 
 typedef ProgressCallback = void Function(String status);
@@ -56,12 +72,24 @@ class PagePublisher {
     return steps;
   }
 
-  Future<PublishResult> publish(Template t, String parentId, {ProgressCallback? onProgress}) async {
+  /// Publishes [t]. With [PublishMode.newPage], [targetId] is the page to create
+  /// it inside; otherwise it is the existing page to write to. [updateDetails]
+  /// also sets that page's title, icon and cover from the template.
+  Future<PublishResult> publish(
+    Template t,
+    String targetId, {
+    PublishMode mode = PublishMode.newPage,
+    bool updateDetails = false,
+    String? targetUrl,
+    ProgressCallback? onProgress,
+  }) async {
+    final existing = mode != PublishMode.newPage;
     final steps = _steps(t.blocks);
 
+    // A new page is created with the first run of blocks; an existing page gets everything appended.
     var firstChunks = <List<Json>>[];
     var rest = steps;
-    if (steps.isNotEmpty && steps.first is List<TemplateBlock>) {
+    if (!existing && steps.isNotEmpty && steps.first is List<TemplateBlock>) {
       firstChunks = chunkNotionBlocks(blocksToNotion(steps.first as List<TemplateBlock>));
       rest = steps.sublist(1);
     }
@@ -77,15 +105,39 @@ class PagePublisher {
       ].fold<int>(0, (a, b) => a + b),
     );
 
-    onProgress?.call('Creating page…');
-    final page = await client.createPage(
-      pagePayload(t, parentId, firstChunks.isEmpty ? [] : firstChunks.first),
-    );
-    final pageId = page['id'] as String;
-    final url = page['url'] as String?;
     final warnings = <String>[];
+    final String pageId;
+    String? url;
+    var oldContent = <BlockSummary>[];
+    if (existing) {
+      pageId = targetId;
+      url = targetUrl;
+      if (mode == PublishMode.replace) {
+        // Remember what is there now; it is removed only after the new content is safely in place.
+        onProgress?.call('Reading the page…');
+        oldContent = await client.listChildren(pageId);
+      }
+      if (updateDetails) {
+        onProgress?.call('Updating the page title…');
+        await client.updatePage(pageId, pageDetailsPayload(t));
+      }
+      if (url == null) {
+        try {
+          url = (await client.getPage(pageId))['url'] as String?;
+        } on NotionException {
+          // The link is only a convenience.
+        }
+      }
+    } else {
+      onProgress?.call('Creating page…');
+      final page = await client.createPage(
+        pagePayload(t, targetId, firstChunks.isEmpty ? [] : firstChunks.first),
+      );
+      pageId = page['id'] as String;
+      url = page['url'] as String?;
+      if (firstChunks.isNotEmpty) left.n -= firstChunks.first.length;
+    }
     PublishResult result() => PublishResult(pageId, url, warnings: List.of(warnings));
-    if (firstChunks.isNotEmpty) left.n -= firstChunks.first.length;
 
     try {
       for (final chunk in firstChunks.skip(1)) {
@@ -104,9 +156,38 @@ class PagePublisher {
         }
       }
     } on NotionException catch (e) {
-      throw PartialPublishException(result(), left.n, e.message);
+      throw PartialPublishException(result(), left.n, e.message, created: !existing);
     }
+
+    if (oldContent.isNotEmpty) await _removeOld(oldContent, warnings, onProgress);
     return result();
+  }
+
+  /// Moves the page's previous content to Notion's trash, one block at a time.
+  /// A block that can't be removed is reported but doesn't stop the others.
+  Future<void> _removeOld(
+    List<BlockSummary> old,
+    List<String> warnings,
+    ProgressCallback? onProgress,
+  ) async {
+    var failed = 0;
+    String? reason;
+    for (var i = 0; i < old.length; i++) {
+      onProgress?.call('Removing the old content (${i + 1}/${old.length})…');
+      try {
+        await client.deleteBlock(old[i].id);
+      } on NotionException catch (e) {
+        if (e.isAuthProblem || e.code == 'restricted_resource') rethrow;
+        failed++;
+        reason ??= e.message;
+      }
+    }
+    if (failed > 0) {
+      warnings.add(
+        'Your new content was added, but $failed of ${old.length} old blocks could not be removed '
+        '($reason). You can delete them in Notion.',
+      );
+    }
   }
 
   /// Creates one database block (and its progress bar, if it has one),

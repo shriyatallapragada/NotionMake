@@ -39,6 +39,12 @@ class SearchResult {
   const SearchResult(this.pages, this.nextCursor);
 }
 
+class BlockSummary {
+  final String id;
+  final String type;
+  const BlockSummary(this.id, this.type);
+}
+
 /// Thin Notion REST client: auth headers, retry on 429, error mapping.
 class NotionClient {
   final String token;
@@ -110,6 +116,31 @@ class NotionClient {
         .toList();
     return SearchResult(pages, res['has_more'] == true ? res['next_cursor'] as String? : null);
   }
+
+  /// A page's details, including its `url`.
+  Future<Map<String, dynamic>> getPage(String id) => _send('GET', '/pages/$id');
+
+  /// Changes a page's title, icon or cover (PATCH /v1/pages/{id}).
+  Future<Map<String, dynamic>> updatePage(String id, Map<String, dynamic> payload) =>
+      _send('PATCH', '/pages/$id', payload);
+
+  /// The direct children of a page or block (all pages of results), with their types.
+  Future<List<BlockSummary>> listChildren(String blockId) async {
+    final out = <BlockSummary>[];
+    String? cursor;
+    do {
+      final q = 'page_size=100${cursor == null ? '' : '&start_cursor=$cursor'}';
+      final res = await _send('GET', '/blocks/$blockId/children?$q');
+      for (final b in (res['results'] as List? ?? [])) {
+        if (b is Map && b['id'] is String) out.add(BlockSummary(b['id'] as String, '${b['type']}'));
+      }
+      cursor = res['has_more'] == true ? res['next_cursor'] as String? : null;
+    } while (cursor != null);
+    return out;
+  }
+
+  /// Moves a block to Notion's trash (DELETE /v1/blocks/{id}). Recoverable in Notion.
+  Future<void> deleteBlock(String id) => _send('DELETE', '/blocks/$id');
 
   Future<Map<String, dynamic>> createPage(Map<String, dynamic> payload) =>
       _send('POST', '/pages', payload);

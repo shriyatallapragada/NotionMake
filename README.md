@@ -12,17 +12,18 @@ Everything runs on your device: there is no server, and your Notion token is kep
 - Reorder by dragging, **undo/redo**, apply a **color theme**, set an icon and cover image.
 - See an approximate **live preview** next to the editor.
 - **Save your own templates**, and import/export them as `.notiontpl.json` files.
-- **Publish** into any page you choose from a searchable list. No page IDs or JSON.
+- **Publish** into any page you choose from a searchable list. No page IDs or JSON. You can create a **new page inside** it (the safe
+  default), **add** your content to the end of it, or **replace** its content, for example to update a page you published earlier.
 
 - **Create with AI**: describe the page you want (and attach a timetable, syllabus or notes) and a free, open-source
   AI model running **on your own computer** builds it for you. See [AI assistant](#ai-assistant-free-and-private).
 
-NotionMake only ever **creates new pages**. It never edits or deletes anything you already have.
+By default NotionMake **creates a new page**. It changes an existing page only when you choose to (see *Publishing*).
 
 ## First-time setup (about 2 minutes)
 
 1. Open <https://www.notion.so/my-integrations> and create a **New integration** (type: Internal).
-   Make sure *Read content* and *Insert content* are enabled.
+   Make sure *Read content*, *Insert content* and *Update content* are enabled.
 2. Copy the **Internal Integration Secret** and paste it into NotionMake's connect screen.
 3. In Notion, open the page you want templates created under, click **...** > **Connections**, and add your
    integration. Pages that aren't shared with the integration won't appear in the app.
@@ -46,6 +47,20 @@ The page appears in the editor, where you can change anything, and **Undo** reve
 
 Local models are smaller than cloud AIs: results are good for typical planners, timetables and trackers, but always glance
 over the page before publishing. Generating takes roughly 20-60 seconds on a recent Mac; the first request also loads the model.
+
+## Publishing: new page, add, or replace
+
+After you pick a page in the publish sheet, choose what to do with it:
+
+| Choice | What happens |
+|---|---|
+| **New page inside it** (default) | A new page is created inside the one you picked. Nothing existing is touched. |
+| **Add to the end of this page** | Your content is added below what is already on the page. Nothing is removed. |
+| **Replace this page's content** | Your content is added first, then the page's old content is moved to Notion's **trash**, where you can restore it. You see a confirmation that says how many blocks (and sub-pages or databases) will be removed. |
+
+For *Add* and *Replace* you can also tick **Also set the page's title, icon and cover**. The **Update "…"** shortcut at the top of the sheet
+re-publishes to the page you published last, so you can edit in the app and keep one page up to date. Because the new content is written
+before the old content is removed, a failure partway never leaves you with less than you started with.
 
 ## Progress bars that follow your tasks (works on every device)
 
