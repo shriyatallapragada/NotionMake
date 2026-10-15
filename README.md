@@ -47,6 +47,35 @@ The page appears in the editor, where you can change anything, and **Undo** reve
 Local models are smaller than cloud AIs: results are good for typical planners, timetables and trackers, but always glance
 over the page before publishing. Generating takes roughly 20-60 seconds on a recent Mac; the first request also loads the model.
 
+## Built-in widgets
+
+NotionMake ships six small widgets that Notion can embed, hosted for free with GitHub Pages from the `docs/widgets` folder
+of this repository. They run entirely in the viewer's browser: no tracking, no cookies, no network calls, and settings in the
+link are only ever shown as text, never run as code.
+
+| Widget | What it shows | Settings |
+|---|---|---|
+| Clock | live time in any time zone, digital or analog | time zone, style, 12-hour, seconds, date, label |
+| Timer | Pomodoro focus timer, countdown timer or stopwatch | mode, focus/break/long minutes, rounds, minutes |
+| Countdown | days, hours and minutes until a date | date, time, label |
+| Calendar | month view, today highlighted, dates you mark | week start, marked dates, month |
+| Progress bar | how far through a day, week, month, year or date range | period, start/end, label |
+| Quote | a short motivating line that changes daily | topic |
+
+All of them take a color: `auto` (follows light/dark), `dark`, `terracotta`, `sage`, `periwinkle`, `navy`, `teal` or `rose`.
+
+- **In the editor:** on an *Widget / embed* block, press a chip (Clock, Timer, ...), fill in the settings, and press **Use this widget**.
+  **Customize** reopens the settings later. You can still paste any other link too.
+- **With the AI:** it adds the widgets you ask for (*"a clock for India time and a 25 minute focus timer"*) and sometimes one
+  you didn't ask for when it clearly helps, such as a countdown when you mention an exam date. At most 3 per page, and the AI only
+  chooses a widget and its settings: the app builds the actual link. Colors are matched to your page automatically.
+- **A gallery** with every setting is at `https://<your-github-name>.github.io/NotionMake/widgets/`.
+- **Hosting them yourself:** fork the repo, enable GitHub Pages (branch `main`, folder `/docs`), and change `widgetsBaseUrl`
+  in `lib/core/constants.dart`. Widgets must be reachable on the public web because Notion loads them in the viewer's browser, so a
+  private repository won't work for embeds.
+
+Notion shows an embed only if the page allows being framed; these pages do. If an embed ever shows just a plain link, tell us.
+
 ## Keyboard shortcuts
 
 | Action | macOS | Windows / Linux |
@@ -101,6 +130,7 @@ The app is not code-signed. On first launch macOS may block it: right-click the 
 lib/
   app_theme.dart            the color palette and theme (change colors here)
   core/                     constants, secure storage, Notion client, mappers, validation, publisher
+  core/widget_library.dart  the built-in widgets: settings, validation and links
   data/                     local persistence (drafts, templates, saved widgets), template files
   features/
     onboarding/             connect screen

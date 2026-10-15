@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Calendar</title>
+<link rel="stylesheet" href="widget.css">
+</head>
+<body>
+<main>
+<div class="row cal-nav"><button id="prev" type="button" aria-label="Previous month">&lsaquo;</button><div class="label cal-title" id="title" aria-live="polite"></div><button id="next" type="button" aria-label="Next month">&rsaquo;</button><button id="today" type="button">Today</button></div>
+<div id="grid" class="cal-grid"></div>
+</main>
+<script src="widget.js"></script>
+<script src="calendar.js"></script>
+</body>
+</html>

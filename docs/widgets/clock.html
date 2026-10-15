@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Clock</title>
+<link rel="stylesheet" href="widget.css">
+</head>
+<body>
+<main>
+<div class="label" id="label"></div>
+<div id="face"><div class="big" id="time" role="timer" aria-live="off"></div></div>
+<div class="sub" id="date"></div>
+</main>
+<script src="widget.js"></script>
+<script src="clock.js"></script>
+</body>
+</html>

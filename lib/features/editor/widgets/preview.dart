@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widget_library.dart';
 import '../models/template_model.dart';
 import '../providers/editor_provider.dart';
 import 'notion_colors.dart';
@@ -201,7 +202,9 @@ class PreviewPane extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  b.text.isEmpty ? 'Embed (add a URL)' : 'Embed: ${b.text}',
+                  b.text.isEmpty
+                      ? 'Embed (add a URL)'
+                      : (WidgetLibrary.describe(b.text) ?? 'Embed: ${b.text}'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

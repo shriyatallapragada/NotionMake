@@ -58,3 +58,7 @@ class WidgetPreset {
     ),
   ];
 }
+
+/// Where the built-in widget pages are hosted (the `docs/widgets` folder of the
+/// repository, served by GitHub Pages). To host them somewhere else, change this.
+const widgetsBaseUrl = 'https://shriyatallapragada.github.io/NotionMake/widgets';

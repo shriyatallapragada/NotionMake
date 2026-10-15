@@ -5,7 +5,9 @@ import '../../../core/constants.dart';
 import '../models/template_model.dart';
 import '../providers/editor_provider.dart';
 import 'notion_colors.dart';
+import '../../../core/widget_library.dart';
 import 'database_editor.dart';
+import 'widget_dialog.dart';
 import 'synced_field.dart';
 
 /// Editor card for one block: drag handle, fields for its type, and a menu.
@@ -378,6 +380,49 @@ class _EmbedEditor extends ConsumerWidget {
       children: [
         Text('Widget / embed', style: Theme.of(context).textTheme.labelMedium),
         const SizedBox(height: 8),
+        Text('Built-in widgets', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final w in WidgetLibrary.all)
+              ActionChip(
+                avatar: Text(w.icon),
+                label: Text(w.label),
+                tooltip: w.description,
+                onPressed: () async {
+                  final url = await showWidgetDialog(context, w);
+                  if (url != null) edit((b) => b.copyWith(text: url));
+                },
+              ),
+          ],
+        ),
+        if (WidgetLibrary.parse(block.text) case final lib?)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    WidgetLibrary.describe(block.text) ?? '',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.tune, size: 18),
+                  label: const Text('Customize'),
+                  onPressed: () async {
+                    final url = await showWidgetDialog(context, lib.widget, initial: lib.options);
+                    if (url != null) edit((b) => b.copyWith(text: url));
+                  },
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+        Text('Or paste any link', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
         SyncedField(
           value: block.text,
           decoration: InputDecoration(

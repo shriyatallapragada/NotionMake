@@ -1,0 +1,57 @@
+/* Shared styles for the NotionMake widgets. No external resources. */
+:root {
+  --bg: #eae8df; --card: #f2f1ec; --fg: #1c1c1c; --muted: #5a5a5c; --accent: #de5e3b; --accent-fg: #1c1c1c; --line: #cfcdc2;
+}
+:root[data-theme="dark"] { --bg: #1c1c1c; --card: #2a2a2c; --fg: #eae8df; --muted: #b8b6ad; --accent: #8a96d6; --accent-fg: #1c1c1c; --line: #444446; }
+:root[data-theme="terracotta"] { --bg: #de5e3b; --card: #e7785a; --fg: #1c1c1c; --muted: #3a2118; --accent: #1c1c1c; --accent-fg: #f2f1ec; --line: #b9482a; }
+:root[data-theme="sage"] { --bg: #a1ca81; --card: #b3d697; --fg: #1c1c1c; --muted: #2f4a1f; --accent: #3a3a3c; --accent-fg: #f2f1ec; --line: #7fa662; }
+:root[data-theme="periwinkle"] { --bg: #8a96d6; --card: #9fa9de; --fg: #1c1c1c; --muted: #2c3260; --accent: #3a3a3c; --accent-fg: #f2f1ec; --line: #6d79bb; }
+:root[data-theme="navy"] { --bg: #2b5876; --card: #35688a; --fg: #f2f1ec; --muted: #cfe0ea; --accent: #d8cd4c; --accent-fg: #1c1c1c; --line: #1f4259; }
+:root[data-theme="teal"] { --bg: #44a1b2; --card: #5db0bf; --fg: #1c1c1c; --muted: #123f48; --accent: #1c1c1c; --accent-fg: #f2f1ec; --line: #2f8494; }
+:root[data-theme="rose"] { --bg: #a6535a; --card: #b56870; --fg: #f2f1ec; --muted: #f0d9db; --accent: #d8cd4c; --accent-fg: #1c1c1c; --line: #86404a; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] { --bg: #1c1c1c; --card: #2a2a2c; --fg: #eae8df; --muted: #b8b6ad; --accent: #8a96d6; --accent-fg: #1c1c1c; --line: #444446; }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: grid; place-items: center; padding: 3vmin;
+  background: var(--bg); color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Everything scales with the size of the embed. */
+  --u: min(2.2vw, 3.6vh);
+  font-size: calc(var(--u) * 1.6);
+}
+main { width: 100%; text-align: center; }
+.big { font-size: calc(var(--u) * 5); font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.sub { font-size: calc(var(--u) * 1.5); color: var(--muted); margin-top: 0.4em; }
+.label { font-size: calc(var(--u) * 1.8); font-weight: 600; margin-bottom: 0.3em; overflow-wrap: anywhere; }
+.row { display: flex; gap: calc(var(--u) * 0.8); justify-content: center; flex-wrap: wrap; margin-top: 1em; }
+button {
+  font: inherit; font-size: calc(var(--u) * 1.4); cursor: pointer; padding: 0.45em 1.1em;
+  border-radius: 999px; border: 1.5px solid var(--fg); background: transparent; color: var(--fg);
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.bar { height: calc(var(--u) * 1.6); background: var(--line); border-radius: 999px; overflow: hidden; margin: 0.7em auto; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .4s; }
+.units { display: flex; gap: calc(var(--u) * 1.4); justify-content: center; }
+.units div { min-width: 3.2em; }
+.units b { display: block; font-size: calc(var(--u) * 4.2); font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.units span { font-size: calc(var(--u) * 1.2); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+svg text { fill: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+/* calendar */
+.cal-h { font-size: calc(var(--u) * 1.1); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding-bottom: .2em; }
+.cal-d { padding: .3em 0; border-radius: .5em; font-variant-numeric: tabular-nums; font-size: calc(var(--u) * 1.5); }
+.cal-today { background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+.cal-mark { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 700; }
+.cal-nav { margin: 0 0 .6em; }
+.cal-title { min-width: 8em; margin: 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .25em; }
+.quote { font-size: calc(var(--u) * 2.6); font-weight: 600; line-height: 1.3; letter-spacing: 0; }
+/* the gallery page */
+body.doc { display: block; padding: 24px; font-size: 16px; }
+.doc-main { text-align: left; max-width: 760px; margin: auto; }
+.doc code { background: var(--card); padding: .1em .4em; border-radius: .3em; }
+.doc a { color: var(--fg); }

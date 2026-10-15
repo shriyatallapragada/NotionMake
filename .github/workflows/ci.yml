@@ -18,3 +18,5 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      - name: Check widget scripts
+        run: for f in docs/widgets/*.js; do node --check "$f"; done

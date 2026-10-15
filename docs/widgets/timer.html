@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Timer</title>
+<link rel="stylesheet" href="widget.css">
+</head>
+<body>
+<main>
+<div class="label" id="mode"></div>
+<div class="big" id="time" role="timer" aria-live="off">00:00</div>
+<div class="bar" aria-hidden="true"><i id="fill"></i></div>
+<div class="sub" id="round"></div>
+<div class="row"><button class="primary" id="go" type="button">Start</button><button id="reset" type="button">Reset</button><button id="skip" type="button" hidden>Skip</button></div>
+</main>
+<script src="widget.js"></script>
+<script src="timer.js"></script>
+</body>
+</html>

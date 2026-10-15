@@ -11,6 +11,7 @@ import 'dart:convert';
 
 import '../../core/constants.dart';
 import '../../core/notion/database_mapper.dart';
+import '../../core/widget_library.dart';
 import '../editor/models/template_model.dart';
 import 'ai_schema.dart';
 
@@ -70,7 +71,76 @@ String _listText(Object? v) {
   return lines.join('\n');
 }
 
-TemplateBlock? _leaf(Map<String, dynamic> m, Set<String> allowedUrls) {
+/// State shared while converting one page.
+class _Ctx {
+  static const maxWidgets = 3;
+  final Set<String> allowedUrls;
+
+  /// A widget color matching the page, used when the model doesn't pick one.
+  final String? theme;
+  int widgets = 0;
+  _Ctx(this.allowedUrls, this.theme);
+}
+
+const _headingToWidgetTheme = {
+  'green': 'sage',
+  'blue': 'navy',
+  'orange': 'terracotta',
+  'red': 'rose',
+  'pink': 'rose',
+  'purple': 'periwinkle',
+};
+
+/// The first heading (or callout) color in the model's JSON, mapped to a widget theme.
+String? _pageTheme(Object? blocks) {
+  for (final m in _maps(blocks)) {
+    final c = _clean(m['color'], max: 30).toLowerCase().replaceAll('_background', '');
+    final t = _headingToWidgetTheme[c];
+    if (t != null && (_typeOf(m) == 'heading' || _typeOf(m) == 'callout')) return t;
+    final inner =
+        _pageTheme(m['children']) ??
+        _pageTheme(_maps(m['columns']).expand((c) => _maps(c['blocks'])).toList());
+    if (inner != null) return inner;
+  }
+  return null;
+}
+
+/// Builds a built-in widget from the model's "widget" + "options". Returns null
+/// when the page already has the maximum number of widgets.
+TemplateBlock? _libraryEmbed(String kind, Object? rawOptions, _Ctx ctx) {
+  final options = <String, String>{};
+  final entries = rawOptions is Map
+      ? [
+          for (final e in rawOptions.entries) {'name': e.key, 'value': e.value},
+        ]
+      : _maps(rawOptions);
+  for (final e in entries) {
+    final name = _clean(e['name'], max: 20).toLowerCase();
+    if (name.isNotEmpty) options[name] = _clean(e['value'], max: 300);
+  }
+  final w = WidgetLibrary.byKind(kind);
+  if (w != null &&
+      ctx.theme != null &&
+      !options.containsKey('theme') &&
+      w.option('theme') != null) {
+    options['theme'] = ctx.theme!;
+  }
+  final built = WidgetLibrary.build(kind, options);
+  if (built == null || built.url == null) {
+    // Unknown kind, or a required setting (such as the countdown date) was missing.
+    final what = w == null ? 'a widget' : 'a ${w.label.toLowerCase()} widget';
+    return TemplateBlock.callout(
+      'Add $what here: paste a widget link into an embed block.',
+      emoji: '💡',
+      color: 'yellow_background',
+    );
+  }
+  if (ctx.widgets >= _Ctx.maxWidgets) return null;
+  ctx.widgets++;
+  return TemplateBlock.embed(built.url!);
+}
+
+TemplateBlock? _leaf(Map<String, dynamic> m, _Ctx ctx) {
   final text = _clean(m['text']);
   switch (_typeOf(m)) {
     case 'heading':
@@ -102,8 +172,10 @@ TemplateBlock? _leaf(Map<String, dynamic> m, Set<String> allowedUrls) {
     case 'divider':
       return TemplateBlock.divider();
     case 'embed':
+      final kind = _clean(m['widget'], max: 30);
+      if (kind.isNotEmpty) return _libraryEmbed(kind, m['options'], ctx);
       final url = text.trim();
-      if (allowedUrls.contains(url)) return TemplateBlock.embed(url);
+      if (ctx.allowedUrls.contains(url)) return TemplateBlock.embed(url);
       // Never trust a URL the user didn't give us: leave a placeholder instead.
       final hint = text.isEmpty || text.contains('://') ? 'a widget' : text;
       return TemplateBlock.callout(
@@ -117,7 +189,7 @@ TemplateBlock? _leaf(Map<String, dynamic> m, Set<String> allowedUrls) {
 
 /// Simple blocks for inside a toggle or column. Containers can't nest, so any
 /// the model put there are flattened into their contents.
-List<TemplateBlock> _leafList(Object? raw, Set<String> allowedUrls, {int depth = 0}) {
+List<TemplateBlock> _leafList(Object? raw, _Ctx ctx, {int depth = 0}) {
   final out = <TemplateBlock>[];
   for (final m in _maps(raw)) {
     switch (_typeOf(m)) {
@@ -125,16 +197,16 @@ List<TemplateBlock> _leafList(Object? raw, Set<String> allowedUrls, {int depth =
         if (depth > 1) break;
         final title = _clean(m['text']);
         if (title.isNotEmpty) out.add(TemplateBlock.paragraph(title));
-        out.addAll(_leafList(m['children'], allowedUrls, depth: depth + 1));
+        out.addAll(_leafList(m['children'], ctx, depth: depth + 1));
       case 'columns':
         if (depth > 1) break;
         for (final c in _maps(m['columns'])) {
-          out.addAll(_leafList(c['blocks'], allowedUrls, depth: depth + 1));
+          out.addAll(_leafList(c['blocks'], ctx, depth: depth + 1));
         }
       case 'database':
         break; // databases can only be top level
       default:
-        final b = _leaf(m, allowedUrls);
+        final b = _leaf(m, ctx);
         if (b != null) out.add(b);
     }
   }
@@ -300,12 +372,13 @@ AiPage aiJsonToTemplate(
   required Set<String> allowedUrls,
   String coverUrl = '',
 }) {
+  final ctx = _Ctx(allowedUrls, _pageTheme(json['blocks']));
   final blocks = <TemplateBlock>[];
   for (final m in _maps(json['blocks'])) {
     if (blocks.length >= _maxTopBlocks) break;
     switch (_typeOf(m)) {
       case 'toggle':
-        final children = _leafList(m['children'], allowedUrls);
+        final children = _leafList(m['children'], ctx);
         blocks.add(
           TemplateBlock.toggle(
             _clean(m['text']).ifEmpty('Details'),
@@ -313,10 +386,10 @@ AiPage aiJsonToTemplate(
           ),
         );
       case 'columns':
-        var cols = [for (final c in _maps(m['columns'])) _leafList(c['blocks'], allowedUrls)];
+        var cols = [for (final c in _maps(m['columns'])) _leafList(c['blocks'], ctx)];
         if (cols.isEmpty && m['children'] is List) {
           // The model put the content in "children": split it in two.
-          final all = _leafList(m['children'], allowedUrls);
+          final all = _leafList(m['children'], ctx);
           final mid = (all.length + 1) ~/ 2;
           cols = [all.sublist(0, mid), all.sublist(mid)];
         }
@@ -337,7 +410,7 @@ AiPage aiJsonToTemplate(
         final db = _database(m);
         if (db != null) blocks.add(db);
       default:
-        final b = _leaf(m, allowedUrls);
+        final b = _leaf(m, ctx);
         if (b != null) blocks.add(b);
     }
   }
@@ -360,13 +433,27 @@ AiPage aiJsonToTemplate(
 /// The current page as JSON in the same shape the model produces, so it can
 /// be sent along with a request to change it.
 Map<String, dynamic> templateToAiJson(Template t) {
-  Map<String, dynamic> leaf(TemplateBlock b) => {
-    'type': b.type.name,
-    if (b.text.isNotEmpty) 'text': b.text,
-    if (b.type == BlockType.heading) 'level': b.level,
-    if (b.type == BlockType.heading || b.type == BlockType.callout) 'color': b.color,
-    if (b.type == BlockType.callout) 'emoji': b.emoji,
-  };
+  Map<String, dynamic> embed(TemplateBlock b) {
+    final lib = WidgetLibrary.parse(b.text);
+    if (lib == null) return {'type': 'embed', 'text': b.text};
+    return {
+      'type': 'embed',
+      'widget': lib.widget.kind,
+      'options': [
+        for (final e in lib.options.entries) {'name': e.key, 'value': e.value},
+      ],
+    };
+  }
+
+  Map<String, dynamic> leaf(TemplateBlock b) => b.type == BlockType.embed
+      ? embed(b)
+      : {
+          'type': b.type.name,
+          if (b.text.isNotEmpty) 'text': b.text,
+          if (b.type == BlockType.heading) 'level': b.level,
+          if (b.type == BlockType.heading || b.type == BlockType.callout) 'color': b.color,
+          if (b.type == BlockType.callout) 'emoji': b.emoji,
+        };
   return {
     'title': t.title,
     'icon': t.icon,
