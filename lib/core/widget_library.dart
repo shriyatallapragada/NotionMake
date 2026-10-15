@@ -256,7 +256,7 @@ class WidgetLibrary {
     LibraryWidget(
       'checklist',
       'Checklist',
-      'Tasks you can tick, with a progress bar that follows them. Use this when the user wants a progress bar connected to their tasks.',
+      'Tasks you can tick inside the widget, with a progress bar that follows them (ticks are saved per device, not synced).',
       '✅',
       [
         WidgetOption('items', 'Tasks', OptionKind.itemList, required: true),

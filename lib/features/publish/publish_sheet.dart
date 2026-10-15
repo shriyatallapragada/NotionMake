@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app_theme.dart';
 import '../../core/notion/notion_client.dart';
 import '../../core/notion/notion_exceptions.dart';
 import '../../core/notion/page_publisher.dart';
@@ -114,6 +115,31 @@ class _PublishSheetState extends ConsumerState<_PublishSheet> {
       ),
       const SizedBox(height: 12),
       Text(_error ?? 'Page created in Notion!', textAlign: TextAlign.center),
+      if (_done!.warnings.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.yellow,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'A note about this page',
+                style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.ink),
+              ),
+              for (final w in _done!.warnings)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(w, style: const TextStyle(color: AppColors.ink)),
+                ),
+            ],
+          ),
+        ),
+      ],
       const SizedBox(height: 16),
       if (_done!.url != null)
         FilledButton.icon(

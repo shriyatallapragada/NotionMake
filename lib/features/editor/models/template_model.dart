@@ -160,6 +160,10 @@ class TemplateBlock {
   final List<DbProperty> properties;
   final List<DbRow> rows;
 
+  /// Database only: id of a checkbox column whose progress is shown in a small
+  /// linked table above the database ('' = no progress bar).
+  final String progress;
+
   const TemplateBlock({
     required this.id,
     required this.type,
@@ -171,6 +175,7 @@ class TemplateBlock {
     this.columns = const [],
     this.properties = const [],
     this.rows = const [],
+    this.progress = '',
   });
 
   factory TemplateBlock.heading(String text, {int level = 1, String color = 'default'}) =>
@@ -213,6 +218,7 @@ class TemplateBlock {
     String title,
     List<DbProperty> props, [
     List<Map<String, String>> rows = const [],
+    String progress = '',
   ]) {
     final byName = {for (final p in props) p.name: p.id};
     return TemplateBlock(
@@ -220,6 +226,12 @@ class TemplateBlock {
       type: BlockType.database,
       text: title,
       properties: props,
+      progress:
+          [
+            for (final p in props)
+              if (p.type == DbPropType.checkbox && p.name == progress) p.id,
+          ].firstOrNull ??
+          '',
       rows: [
         for (final r in rows)
           DbRow(
@@ -271,6 +283,7 @@ class TemplateBlock {
     List<List<TemplateBlock>>? columns,
     List<DbProperty>? properties,
     List<DbRow>? rows,
+    String? progress,
   }) => TemplateBlock(
     id: id ?? this.id,
     type: type,
@@ -282,6 +295,7 @@ class TemplateBlock {
     columns: columns ?? this.columns,
     properties: properties ?? this.properties,
     rows: rows ?? this.rows,
+    progress: progress ?? this.progress,
   );
 
   /// A deep copy where this block and all descendants get new ids.
@@ -291,6 +305,23 @@ class TemplateBlock {
     columns: [for (final c in columns) c.withFreshIds()],
     rows: [for (final r in rows) DbRow(id: newBlockId(), values: r.values)],
   );
+
+  /// The checkbox column the progress bar follows, or null if none is set (or
+  /// the column was deleted or is no longer a checkbox).
+  DbProperty? get progressColumn {
+    if (type != BlockType.database || progress.isEmpty) return null;
+    for (final p in properties) {
+      if (p.id == progress && p.type == DbPropType.checkbox) return p;
+    }
+    return null;
+  }
+
+  /// Checked rows / all rows for the progress column, for previews.
+  ({int done, int total})? get progressCounts {
+    final c = progressColumn;
+    if (c == null) return null;
+    return (done: rows.where((r) => r.values[c.id] == 'true').length, total: rows.length);
+  }
 
   /// Non-empty lines, for list blocks.
   List<String> get lines =>
@@ -314,6 +345,7 @@ class TemplateBlock {
       ],
     if (properties.isNotEmpty) 'properties': [for (final p in properties) p.toJson()],
     if (rows.isNotEmpty) 'rows': [for (final r in rows) r.toJson()],
+    if (progress.isNotEmpty) 'progress': progress,
   };
 
   /// Parses a block. [depth] 0 is top level; containers are only allowed there.
@@ -353,6 +385,7 @@ class TemplateBlock {
       columns: cols,
       properties: props,
       rows: rows,
+      progress: (j['progress'] as String?) ?? '',
     );
   }
 }

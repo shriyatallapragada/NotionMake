@@ -58,6 +58,32 @@ class DatabaseEditor extends StatelessWidget {
                   ),
           ),
         ),
+        if (block.properties.any((p) => p.type == DbPropType.checkbox)) ...[
+          const SizedBox(height: 8),
+          InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Progress bar',
+              isDense: true,
+              helperText:
+                  'Adds a small linked table above this one that Notion keeps up to date as boxes are '
+                  'ticked, on every device.',
+              helperMaxLines: 3,
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                isDense: true,
+                value: block.progressColumn?.id ?? '',
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('None')),
+                  for (final p in block.properties.where((p) => p.type == DbPropType.checkbox))
+                    DropdownMenuItem(value: p.id, child: Text('Follow "${p.name}"')),
+                ],
+                onChanged: (v) => edit((b) => b.copyWith(progress: v ?? '')),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 4),
         Text('Sample rows (${block.rows.length}/${TemplateBlock.maxDbRows})', style: label),
         for (final row in block.rows) _rowEditor(context, row),

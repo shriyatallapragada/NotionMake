@@ -57,6 +57,12 @@ void main() {
       }
       final todos = t.blocks.where((b) => b.type == BlockType.todo).length;
       stdout.writeln('separate to-do blocks: $todos');
+      for (final b in t.blocks.where((b) => b.type == BlockType.database)) {
+        final cols = b.properties.map((p) => '${p.name}:${p.type.name}').join(', ');
+        stdout.writeln(
+          'database "${b.text}": $cols | ${b.rows.length} rows | progress bar: ${b.progressColumn?.name ?? 'none'}',
+        );
+      }
       stdout.writeln('WARNING: ${outcome.warning}');
       expect(validateTemplate(t), isNull);
     },

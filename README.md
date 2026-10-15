@@ -47,6 +47,19 @@ The page appears in the editor, where you can change anything, and **Undo** reve
 Local models are smaller than cloud AIs: results are good for typical planners, timetables and trackers, but always glance
 over the page before publishing. Generating takes roughly 20-60 seconds on a recent Mac; the first request also loads the model.
 
+## Progress bars that follow your tasks (works on every device)
+
+In a **database** block that has a checkbox column (such as *Done*), choose **Progress bar > Follow "Done"**. When you publish,
+NotionMake creates two linked Notion databases: a small "*name* progress" table above your tasks, with one row that is linked to every task and
+shows **Done**, **Total**, **Percent** and a text bar such as `████░░░░░░  40%`, and your tasks table below it. Notion itself does the
+counting, so ticking a task updates the bar instantly on every device, including the mobile app, and nothing is hosted anywhere.
+
+- The **Task Tracker** starter has it, and the **AI** builds it when you ask for "a progress bar for my tasks".
+- **Tasks you add later** in Notion: the tasks table gets a "Related to ... progress" column. Pick the goal there and the new task is counted.
+- If Notion refuses the text-bar column, you still get Done, Total and Percent, plus a note when publishing. Click the *Percent* column and
+  choose **Show as > Bar** for a visual bar.
+- The progress table also lists each task in a *Tasks* column; use the column's menu to hide it if you like.
+
 ## Built-in widgets
 
 NotionMake ships seven small widgets that Notion can embed, hosted for free with GitHub Pages from the `docs/widgets` folder
@@ -75,7 +88,7 @@ All of them take a color: `auto` (follows light/dark), `dark`, `terracotta`, `sa
   in `lib/core/constants.dart`. Widgets must be reachable on the public web because Notion loads them in the viewer's browser, so a
   private repository won't work for embeds.
 
-**About the checklist:** a Notion embed is a separate web page, and Notion doesn't let it see your page's own to-do blocks, so a widget can't
+**About the checklist widget:** for progress that follows your real tasks, use a database progress bar (above). A Notion embed is a separate web page, and Notion doesn't let it see your page's own to-do blocks, so a widget can't
 follow them. The checklist therefore has its *own* tasks: tick them inside the widget and its progress bar moves. Ticks are remembered in that
 browser or app on that device; they are not synced between devices, and they don't change Notion's own to-do blocks. When you ask the AI for a
 "progress bar for my tasks", it builds this widget with your tasks inside it instead of a separate to-do list.

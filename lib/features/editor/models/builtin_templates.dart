@@ -157,7 +157,7 @@ final List<BuiltinTemplate> builtinTemplates = [
   ),
   BuiltinTemplate(
     'Task Tracker',
-    'A table of tasks with priority, due date and done checkbox.',
+    'A table of tasks with a progress bar that follows the Done checkbox.',
     () => Template(
       title: 'Task Tracker',
       icon: '✅',
@@ -180,6 +180,7 @@ final List<BuiltinTemplate> builtinTemplates = [
             {'Task': 'Review with a friend', 'Priority': 'Medium', 'Done': 'false'},
             {'Task': 'Publish', 'Priority': 'Low', 'Done': 'false'},
           ],
+          'Done', // progress bar follows the Done checkbox
         ),
       ],
     ).withTheme(_sunset),

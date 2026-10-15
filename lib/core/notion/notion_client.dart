@@ -118,6 +118,10 @@ class NotionClient {
   Future<Map<String, dynamic>> createDatabase(Map<String, dynamic> payload) =>
       _send('POST', '/databases', payload);
 
+  /// Adds or changes properties of a database (PATCH /v1/databases/{id}).
+  Future<Map<String, dynamic>> updateDatabase(String id, Map<String, dynamic> payload) =>
+      _send('PATCH', '/databases/$id', payload);
+
   Future<void> appendChildren(String blockId, List<Map<String, dynamic>> children) =>
       _send('PATCH', '/blocks/$blockId/children', {'children': children});
 }

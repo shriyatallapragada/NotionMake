@@ -252,6 +252,32 @@ class PreviewPane extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 6),
+          if (b.progressCounts case final c?)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: c.total == 0 ? 0 : c.done / c.total,
+                        minHeight: 8,
+                        backgroundColor: const Color(0xFFE3E2E0),
+                        color: const Color(0xFF2EAADC),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    c.total == 0
+                        ? 'No tasks yet'
+                        : '${(c.done / c.total * 100).round()}% · ${c.done} of ${c.total}',
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF787774)),
+                  ),
+                ],
+              ),
+            ),
           if (b.properties.isNotEmpty)
             Table(
               border: const TableBorder(

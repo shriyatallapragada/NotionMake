@@ -346,7 +346,20 @@ TemplateBlock? _database(Map<String, dynamic> m) {
     if (type.hasOptions && options[i].isEmpty) type = DbPropType.text; // nothing to choose from
     props.add(DbProperty.make(labels[i], type, options: options[i].join(', ')));
   }
-  return TemplateBlock.database(_clean(d['title'], max: 100).ifEmpty('Table'), props, rows);
+  // The progress bar follows a checkbox column, matched by name (ignoring case).
+  final wanted = _clean(d['progress'], max: 60).toLowerCase();
+  var progress = '';
+  if (wanted.isNotEmpty) {
+    for (final p in props) {
+      if (p.type == DbPropType.checkbox && p.name.toLowerCase() == wanted) progress = p.name;
+    }
+  }
+  return TemplateBlock.database(
+    _clean(d['title'], max: 100).ifEmpty('Table'),
+    props,
+    rows,
+    progress,
+  );
 }
 
 /// Matches [value] to an existing option (ignoring case), or adds it.
@@ -477,6 +490,7 @@ Map<String, dynamic> templateToAiJson(Template t) {
             'type': 'database',
             'database': {
               'title': b.text,
+              if (b.progressColumn != null) 'progress': b.progressColumn!.name,
               'properties': [
                 for (final p in b.properties)
                   {
